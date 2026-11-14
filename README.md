@@ -10,66 +10,60 @@
 
 <p align="center">
   <b>A modern, zero-dependency, open-source 8086 microprocessor emulator, two-pass assembler, and interactive university lab suite.</b><br>
-  <i>Built to replace outdated, proprietary 16-bit software and give students, educators, and engineers a fast, beautiful, and reliable 8086 playground.</i>
+  <i>Runs natively in any browser with zero installation — built for students, educators, and assembly enthusiasts.</i>
 </p>
 
 ---
 
-## ⚡ Why Open8086? (Taking Down Legacy emu8086)
+## ✨ Features & Highlights
 
-For over two decades, engineering universities have relied on abandoned 2005-era `emu8086` software that requires DOSBox emulators, crashes on modern 64-bit Windows, lacks high-DPI scaling, and triggers false-positive antivirus warnings.
+Open8086 brings a fast, accessible, and intuitive 8086 development experience to the modern web:
 
-**Open8086 fixes everything:**
-
-| Feature | Legacy emu8086 (2005) | 🚀 Open8086 (Modern) |
-| :--- | :---: | :---: |
-| **Platform Support** | Windows only (needs DOSBox/Wine on Linux/Mac) | **Any Browser (Windows, macOS, Linux, ChromeOS, iOS, Android)** |
-| **Installation** | Requires installer & admin privileges | **Zero install! Just open `index.html`** |
-| **Antivirus Issues** | Unsigned 16/32-bit binaries trigger false alarms | **100% clean, zero false alarms** |
-| **Instruction Set** | Incomplete & undocumented quirks | **All 116 instructions verified with automated tests** |
-| **Undo / Step Back** | ❌ Not available | **✅ Step Back (`Ctrl+Z`) reverses CPU state** |
-| **Preloaded Labs** | ❌ None | **✅ 20 complete syllabus experiments preloaded** |
-| **Memory Inspector** | Clunky separate window | **Live 1MB Hex Dump with read/write access highlighting** |
-| **Flag Toggling** | Read-only indicators | **Click any flag (`CF`, `ZF`, `SF`, etc.) to toggle live!** |
-| **Register Editing** | Multi-step dialog | **Click any register to edit in Hex, Dec, or Binary** |
-| **Themes** | Grey Windows 98 / XP only | **Modern Dark, Clean Light, Retro XP, Green CRT Phosphor** |
-| **Dependencies** | Proprietary closed-source DLLs | **100% Pure Vanilla JS, HTML5, CSS3 (0 dependencies)** |
+- 🌐 **100% Client-Side & Offline**: Runs entirely in the browser with zero downloads, zero installations, and zero external runtime dependencies.
+- 🧠 **Complete 116 Instruction Set**: Implements all 116 original 8086 instructions, thoroughly verified with automated test suites.
+- ⏪ **Step Back / Time-Travel Debugging**: Made a wrong jump or stepped past a branch? Hit `Ctrl+Z` to reverse the CPU state and step backward in time.
+- 🧪 **Preloaded University Lab Suite**: 20 complete, tested programs covering standard computer architecture coursework (arithmetic across addressing modes, array search, sorting, and interrupts).
+- 🎛️ **Live Hardware Controls**:
+  - **All 9 Processor Flags**: Inspect and toggle `CF`, `PF`, `AF`, `ZF`, `SF`, `TF`, `IF`, `DF`, and `OF` with a single click.
+  - **Interactive Registers**: Live 16-bit and 8-bit split registers (`AX`, `BX`, `CX`, `DX`, pointers, and segments) with real-time editing in Hex, Decimal, or Binary.
+- 🔍 **Interactive 1MB Memory Hex Dump**: Full address space visualization (`Segment * 16 + Offset`) with live read/write access highlighting and inline byte editing.
+- 🥞 **Visual Stack Inspector**: Live tracking of the runtime stack from `SS:SP` upward with active `SP` and `BP` pointer indicators.
+- 🖥️ **Virtual DOS Screen**: 80x25 terminal supporting DOS `INT 21h` (character I/O, string display, buffered input, termination) and BIOS `INT 10h` / `INT 16h` screen and keyboard services.
+- 📖 **Built-in Searchable Documentation**: Browse instructions with descriptions, operand signatures, algorithms, flag impact tables, and 1-click code insertion.
+- 🎨 **Multiple Themes**: Modern Dark, Clean Light, Classic Windows XP Retro style, and Vintage Green Phosphor CRT Screen.
 
 ---
 
-## 🏃 Quick Start (Run Anywhere in Seconds)
+## 🏃 Quick Start
 
 ### 🌟 Option 1: Instant Browser (Recommended)
-No server, no internet, and no Node.js required. Simply double-click:
+No server, no internet connection, and no Node.js required. Simply open:
 ```
 index.html
 ```
-The entire emulator and assembler run locally in Chrome, Edge, Firefox, Brave, or Safari!
+in any modern web browser (Chrome, Edge, Firefox, Brave, Safari).
 
 ### Option 2: Local Server (For Sharing on Wi-Fi / LAN)
-Run the zero-dependency Node.js server to share with lab classmates:
+Run the built-in zero-dependency Node.js server to share with classmates over your local network:
 ```bash
 npm start
 # Server starts at http://localhost:8086
 ```
 
-### Option 3: Native App Window on Windows
-Double-click `launch.bat` or `Open8086.vbs` to launch as a borderless standalone desktop window.
+### Option 3: Standalone App Window (Windows)
+Double-click `launch.bat` or `Open8086.vbs` to launch Open8086 in a clean, borderless app window.
 
-### Option 4: Deploy Instantly to GitHub Pages
-1. Push this repository to GitHub.
-2. Go to **Settings > Pages** in your GitHub repository.
-3. Under **Build and deployment > Source**, choose **GitHub Actions** (a workflow is already included in `.github/workflows/deploy-pages.yml`).
-4. Your emulator is instantly live on `https://<username>.github.io/<repo>/`!
+### Option 4: Live GitHub Pages
+Deployable to GitHub Pages in one click via GitHub Actions (`.github/workflows/deploy-pages.yml`).
 
 ---
 
-## 🧪 Preloaded University Lab Experiments (Experiments 1 to 4)
+## 🧪 Preloaded University Lab Experiments
 
-Built-in with full source code, register tracking, and step-by-step documentation for standard microprocessor laboratory coursework:
+Open8086 includes 20 preloaded, well-documented programs aligned with university microprocessor laboratory curricula. Click **"Load into Editor & Assemble"** under the **Lab Experiments** tab to load any program:
 
 <details>
-<summary><b>View All 20 Preloaded Lab Experiments</b></summary>
+<summary><b>View All 20 Preloaded Lab Programs</b></summary>
 
 ### Experiment No. 1: Addition & Subtraction using Different Addressing Modes
 - **1a.** Addition of two 8-bit numbers (Register, Immediate, Direct, Indirect addressing)
@@ -99,14 +93,14 @@ Built-in with full source code, register tracking, and step-by-step documentatio
 - **4c.** Reverse the order of array elements (in-place two-pointer swap)
 
 ### Bonus Demo:
-- **Hello World**: DOS `INT 21h` (AH=09h string output).
+- **Hello World**: DOS `INT 21h` (AH=09h string display).
 </details>
 
 ---
 
-## 🧠 Complete 116 Instruction Set Reference
+## 🧠 Complete 116 Instruction Set
 
-All 116 original 8086 instructions are fully implemented, verified, and browsable directly inside the app:
+All 116 standard 8086 instructions are fully implemented and verified:
 
 ```
 AAA, AAD, AAM, AAS, ADC, ADD, AND, CALL, CBW, CLC, CLD, CLI, CMC, CMP,
@@ -120,8 +114,6 @@ RCR, REP, REPE, REPNE, REPNZ, REPZ, RET, RETF, ROL, ROR, SAHF, SAL,
 SAR, SBB, SCASB, SCASW, SHL, SHR, STC, STD, STI, STOSB, STOSW, SUB,
 TEST, WAIT, XCHG, XLATB, XOR
 ```
-
-Click the **116 Instruction Reference** tab to search by name or category, inspect operand signatures, view flag influence tables, and insert pre-formatted syntax snippets into the editor with one click.
 
 ---
 
@@ -138,63 +130,62 @@ Click the **116 Instruction Reference** tab to search by name or category, inspe
 
 ---
 
-## 🖥️ Virtual Hardware & Subsystems
+## 🖥️ Architecture & Subsystems
 
 1. **CPU Engine (`js/cpu.js`)**:
    - 16-bit general registers: `AX`, `BX`, `CX`, `DX`.
-   - 8-bit split access: `AH`/`AL`, `BH`/`BL`, `CH`/`CL`, `DH`/`DL`.
+   - 8-bit split registers: `AH`/`AL`, `BH`/`BL`, `CH`/`CL`, `DH`/`DL`.
    - Pointers & Indexes: `SP`, `BP`, `SI`, `DI`, `IP`.
    - Segment Registers: `CS`, `DS`, `SS`, `ES`.
-   - Flags Register (9 active flags): `CF`, `PF`, `AF`, `ZF`, `SF`, `TF`, `IF`, `DF`, `OF`.
-   - Full execution history stack for Step Back / Undo.
+   - Flags: All 9 active 8086 flags (`CF`, `PF`, `AF`, `ZF`, `SF`, `TF`, `IF`, `DF`, `OF`).
+   - Execution history stack for Step Back / Undo.
 
-2. **Memory Subsystem (`js/memory.js`)**:
+2. **Memory Model (`js/memory.js`)**:
    - 1 Megabyte physical address space (`Segment * 16 + Offset`).
-   - Read & write access tracking for real-time visualization.
-   - String buffer reading (`$` terminated strings).
+   - Read & write access tracking for live UI visualization.
 
 3. **Two-Pass Assembler (`js/assembler.js`)**:
    - Directives: `ORG`, `DB`, `DW`, `DD`, `DUP`, `EQU`, `OFFSET`, `PTR`.
-   - Addressing modes: Immediate, Register, Direct (`[num]`), Indirect (`[BX]`, `[SI]`, `[DI]`, `[BP]`), Based Relative (`[BX+si]`, `[BP+di+4]`).
-   - Source code to IP line mapping for synchronized cursor stepping.
+   - Addressing modes: Immediate, Register, Direct (`[num]`), Indirect (`[BX]`, `[SI]`, `[DI]`, `[BP]`), Based Relative (`[BX+SI]`, `[BP+DI+4]`).
+   - Synchronized line mapping for editor execution pointer.
 
-4. **BIOS / DOS Interrupts (`js/interrupts.js`)**:
+4. **BIOS & DOS Interrupts (`js/interrupts.js`)**:
    - `INT 21h`: AH=01h (read char), AH=02h (write char), AH=09h (write string), AH=0Ah (buffered input), AH=4Ch (exit).
    - `INT 10h`: AH=00h (set mode), AH=02h (set cursor), AH=06h (clear screen), AH=0Eh (teletype output).
    - `INT 16h`: AH=00h (read keystroke), AH=01h (check keystroke).
    - `INT 20h`: Terminate program.
    - `INT 3`: Breakpoint interrupt.
 
-5. **Virtual DOS Screen (`js/terminal.js`)**:
-   - 80x25 character screen with flashing cursor and interactive keyboard buffer.
+5. **Virtual DOS Terminal (`js/terminal.js`)**:
+   - 80x25 character screen with blinking cursor and interactive keyboard buffer.
 
 ---
 
 ## 🧪 Automated Testing
 
-Run the full automated test suite locally:
+Run the automated test suite locally:
 ```bash
 npm test
 ```
 
 Or run individual test modules:
 ```bash
-npm run test:instructions   # Tests all 116 instructions
+npm run test:instructions   # Verifies all 116 instructions
 npm run test:experiments    # Tests all 20 lab programs
-npm run test:correctness    # Verifies array algorithms & math results
-npm run test:coverage       # Checks CPU implementation coverage
+npm run test:correctness    # Verifies array algorithms & mathematical results
+npm run test:coverage       # Checks CPU instruction implementation coverage
 ```
 
 ---
 
 ## 🤝 Contributing
 
-Contributions, bug reports, and pull requests are welcome!
-Please check out [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before getting started.
+Contributions, bug reports, and suggestions are welcome!
+Please review [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before submitting pull requests.
 
 ---
 
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
-Feel free to use, modify, and distribute for educational and commercial purposes.
+Feel free to use, modify, and distribute for educational and personal use.
