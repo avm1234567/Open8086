@@ -1,0 +1,35 @@
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Node / Dependency directories
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Scratch & Debug artifacts
+js/test.txt
+tools/debug_*.js
+tools/inspect_*.js
+tools/instructions.json
+tools/launcher.cs
+tools/parse_docs.js
+tools/extract_all_instructions.js
+tools/build_instruction_module.js

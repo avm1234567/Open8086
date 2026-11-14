@@ -1,0 +1,38 @@
+{
+  "name": "emu8086-pro",
+  "version": "1.0.0",
+  "description": "EMU8086 PRO - Zero-dependency, modern web-based 8086 microprocessor emulator, assembler, and interactive university lab suite.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tools/test_all_116_instructions.js && node tools/test_experiments.js && node tools/verify_correctness.js",
+    "test:instructions": "node tools/test_all_116_instructions.js",
+    "test:experiments": "node tools/test_experiments.js",
+    "test:correctness": "node tools/verify_correctness.js",
+    "test:coverage": "node tools/check_cpu_coverage.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/emu8086-pro/emu8086-pro.git"
+  },
+  "keywords": [
+    "emu8086",
+    "8086",
+    "emulator",
+    "microprocessor",
+    "assembly",
+    "assembler",
+    "virtual-machine",
+    "dos",
+    "dosbox",
+    "education",
+    "university-lab",
+    "computer-architecture"
+  ],
+  "author": "EMU8086 PRO Contributors",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/emu8086-pro/emu8086-pro/issues"
+  },
+  "homepage": "https://github.com/emu8086-pro/emu8086-pro#readme"
+}

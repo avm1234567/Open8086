@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EMU8086 PRO - 8086 Microprocessor Emulator & Lab Suite</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="theme-dark">
+
+  <!-- Header / Navigation Toolbar -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-icon">86</div>
+      <div>
+        <span class="brand-title">EMU8086 PRO</span>
+        <span class="brand-badge">Lab Suite</span>
+      </div>
+    </div>
+
+    <div class="toolbar-controls">
+      <!-- File Operations -->
+      <div class="btn-group">
+        <button id="btn-new" class="btn" title="Create New Program">📄 New</button>
+        <button id="btn-open" class="btn" title="Open .asm file">📂 Open</button>
+        <button id="btn-save" class="btn" title="Save .asm file (Ctrl+S)">💾 Save</button>
+        <input type="file" id="file-input" accept=".asm,.txt" style="display: none;">
+      </div>
+
+      <!-- Execution Controls -->
+      <div class="btn-group">
+        <button id="btn-assemble" class="btn btn-primary" title="Assemble source code">⚡ Assemble</button>
+        <button id="btn-run" class="btn btn-success" title="Run / Pause execution (F5)"><span class="icon">▶</span> Run</button>
+        <button id="btn-step" class="btn" title="Single Step instruction (F8)">⏭ Step (F8)</button>
+        <button id="btn-step-back" class="btn" title="Undo / Step Back (Ctrl+Z)">⏮ Step Back</button>
+        <button id="btn-reset" class="btn" title="Reset CPU and reload">🔄 Reset</button>
+      </div>
+
+      <!-- Speed Control -->
+      <div class="speed-control" title="Adjust single step delay">
+        <span>Speed:</span>
+        <input type="range" id="speed-slider" min="0" max="500" value="50" step="10">
+        <span id="speed-label">50ms</span>
+      </div>
+
+      <!-- Theme Selector -->
+      <select id="theme-select" class="dropdown-select" title="Switch Theme">
+        <option value="dark">🌙 Modern Dark</option>
+        <option value="light">☀️ Modern Light</option>
+        <option value="retro">🖥️ Classic emu8086</option>
+        <option value="crt-green">📟 Green CRT Phosphor</option>
+      </select>
+
+      <!-- Share Button -->
+      <button id="btn-share" class="btn" title="Copy code to clipboard & Share">🔗 Share Code</button>
+    </div>
+  </header>
+
+  <!-- Main Split Workspace -->
+  <main class="app-workspace">
+
+    <!-- Left Column: Source Code Editor -->
+    <section class="editor-pane">
+      <div class="pane-header">
+        <div class="pane-title">
+          <span>📝 8086 Source Code (Assembly)</span>
+        </div>
+        <div class="editor-header-actions">
+          <span style="font-size: 11px; color: var(--text-dim); margin-right: 8px;">Click line numbers to set breakpoints</span>
+        </div>
+      </div>
+
+      <div class="editor-workspace">
+        <div class="line-numbers-col" id="line-numbers"></div>
+        <div class="editor-exec-highlight" id="editor-highlight"></div>
+        <textarea id="code-editor" class="code-textarea" spellcheck="false" placeholder="Write or paste 8086 assembly code here..."></textarea>
+      </div>
+
+      <!-- Assembler Error Drawer -->
+      <div id="assembler-errors" class="assembler-errors-box"></div>
+    </section>
+
+    <!-- Right Column: Emulator State & Interactive Tools -->
+    <section class="emulator-pane">
+
+      <!-- Top: CPU State Card (Registers & Flags) -->
+      <div class="cpu-state-card">
+        <div class="cpu-header">
+          <div class="pane-title">⚙️ CPU Registers & Flags</div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 11px; color: var(--text-dim);">Display Base:</label>
+            <select id="reg-format-select" class="dropdown-select" style="padding: 2px 6px;">
+              <option value="hex">HEX (16-bit)</option>
+              <option value="dec">DEC (Unsigned)</option>
+              <option value="signed">DEC (Signed)</option>
+              <option value="bin">BIN (Binary)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Registers Grid -->
+        <div id="registers-table"></div>
+
+        <!-- Flags Bar -->
+        <div>
+          <div class="reg-section-title">Processor Flags (Click to Toggle)</div>
+          <div id="flags-container" class="flags-bar"></div>
+        </div>
+      </div>
+
+      <!-- Bottom: Multi-Tool Tabbed Workspace -->
+      <div class="tabbed-tools-pane">
+        <nav class="nav-tabs">
+          <button class="tab-btn active" data-tab="tab-terminal">🖥️ Virtual Screen (DOS)</button>
+          <button class="tab-btn" data-tab="tab-memory">🔍 Memory Hex Dump</button>
+          <button class="tab-btn" data-tab="tab-stack">🥞 Stack (SS:SP)</button>
+          <button class="tab-btn" data-tab="tab-labs" style="color: var(--accent-amber); font-weight: 700;">🧪 Lab Experiments (1 to 4)</button>
+          <button class="tab-btn" data-tab="tab-instructions">📖 116 Instruction Reference</button>
+          <button class="tab-btn" data-tab="tab-symbols">🏷️ Symbols & Labels</button>
+        </nav>
+
+        <div class="tab-content">
+          <!-- Tab 1: Virtual DOS Screen -->
+          <div id="tab-terminal" class="tab-pane active">
+            <div id="terminal-container" class="terminal-wrapper"></div>
+          </div>
+
+          <!-- Tab 2: Memory Hex Dump -->
+          <div id="tab-memory" class="tab-pane">
+            <div class="mem-toolbar">
+              <div class="mem-input-group">
+                <label style="font-size: 11px; color: var(--text-dim);">Jump to Segment:Offset:</label>
+                <input type="text" id="mem-address-input" value="0700:0100" placeholder="0700:0100 or var">
+                <button id="btn-mem-go" class="btn" style="padding: 4px 8px; font-size: 11px;">Go</button>
+              </div>
+              <div class="btn-group">
+                <button id="btn-jump-csip" class="btn" style="padding: 4px 8px; font-size: 11px;">CS:IP</button>
+                <button id="btn-jump-ds" class="btn" style="padding: 4px 8px; font-size: 11px;">DS:0000</button>
+                <button id="btn-jump-sssp" class="btn" style="padding: 4px 8px; font-size: 11px;">SS:SP</button>
+              </div>
+              <span style="font-size: 11px; color: var(--text-dim);">Double-click any byte to edit</span>
+            </div>
+            <div id="memory-hex-dump" style="overflow-x: auto;"></div>
+          </div>
+
+          <!-- Tab 3: Stack View -->
+          <div id="tab-stack" class="tab-pane">
+            <div style="margin-bottom: 8px; font-size: 12px; color: var(--text-dim);">
+              Stack visualization from current SS:SP upward:
+            </div>
+            <div id="stack-container"></div>
+          </div>
+
+          <!-- Tab 4: Lab Experiments -->
+          <div id="tab-labs" class="tab-pane">
+            <div class="lab-split-view">
+              <div id="lab-experiments-list" style="overflow-y: auto;"></div>
+              <div id="lab-experiment-detail"></div>
+            </div>
+          </div>
+
+          <!-- Tab 5: 116 Instruction Reference -->
+          <div id="tab-instructions" class="tab-pane">
+            <div class="inst-split-view">
+              <div class="inst-left">
+                <div class="inst-search-box">
+                  <input type="text" id="instruction-search" placeholder="Search 116 instructions...">
+                </div>
+                <div id="instructions-list" class="instructions-scroll"></div>
+              </div>
+              <div id="instruction-detail"></div>
+            </div>
+          </div>
+
+          <!-- Tab 6: Symbols & Labels -->
+          <div id="tab-symbols" class="tab-pane">
+            <table class="hex-table" style="text-align: left;">
+              <thead>
+                <tr>
+                  <th>Symbol / Label</th>
+                  <th>Type</th>
+                  <th>Offset</th>
+                  <th>Size</th>
+                  <th>Source Line</th>
+                </tr>
+              </thead>
+              <tbody id="symbol-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Footer Status Bar -->
+  <footer class="app-footer">
+    <div id="status-message" class="status-badge">Ready.</div>
+    <div class="footer-metrics">
+      <span>Cycles: <b id="cycle-counter">0</b></span>
+      <span>Steps: <b id="step-counter">0</b></span>
+      <span>Shortcuts: <b>F8</b> (Step) | <b>F5</b> (Run) | <b>Ctrl+Enter</b> (Assemble & Run)</span>
+    </div>
+  </footer>
+
+  <!-- Application Logic Scripts -->
+  <script src="js/instructions_data.js"></script>
+  <script src="js/experiments_data.js"></script>
+  <script src="js/memory.js"></script>
+  <script src="js/interrupts.js"></script>
+  <script src="js/cpu.js"></script>
+  <script src="js/assembler.js"></script>
+  <script src="js/terminal.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
