@@ -34,5 +34,8 @@
   "bugs": {
     "url": "https://github.com/avm1234567/open8086/issues"
   },
-  "homepage": "https://github.com/avm1234567/open8086#readme"
+  "homepage": "https://github.com/avm1234567/open8086#readme",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
 }
