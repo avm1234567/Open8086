@@ -1,4 +1,4 @@
-' EMU8086 PRO - Silent Desktop Launcher
+' Open8086 - Silent Desktop Launcher
 Dim WshShell, fso, currentDir, htmlPath, uri
 
 Set WshShell = CreateObject("WScript.Shell")
@@ -8,7 +8,7 @@ currentDir = fso.GetParentFolderName(WScript.ScriptFullName)
 htmlPath = fso.BuildPath(currentDir, "index.html")
 
 If Not fso.FileExists(htmlPath) Then
-    MsgBox "index.html was not found in: " & currentDir, vbCritical, "EMU8086 PRO"
+    MsgBox "index.html was not found in: " & currentDir, vbCritical, "Open8086"
     WScript.Quit
 End If
 

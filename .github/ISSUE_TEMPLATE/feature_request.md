@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea or feature for EMU8086 PRO
+about: Suggest an idea or feature for Open8086
 title: '[FEATURE] '
 labels: enhancement
 assignees: ''

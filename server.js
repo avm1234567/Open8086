@@ -49,7 +49,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log(`=======================================================`);
-  console.log(` EMU8086 PRO Server is running!`);
+  console.log(` Open8086 Server is running!`);
   console.log(` Local:   http://localhost:${PORT}`);
   console.log(` Share with peers over local Wi-Fi / LAN`);
   console.log(` Press Ctrl+C to stop`);

@@ -1,6 +1,6 @@
-# Contributing to EMU8086 PRO
+# Contributing to Open8086
 
-Thank you for your interest in contributing to **EMU8086 PRO**! Our mission is to provide an open, modern, zero-dependency, and cross-platform alternative to legacy `emu8086` for students, engineers, and educators worldwide.
+Thank you for your interest in contributing to **Open8086**! Our mission is to provide an open, modern, zero-dependency, and cross-platform alternative to legacy `emu8086` for students, engineers, and educators worldwide.
 
 ---
 
@@ -16,8 +16,8 @@ Thank you for your interest in contributing to **EMU8086 PRO**! Our mission is t
 
 1. **Fork & Clone**:
    ```bash
-   git clone https://github.com/<your-username>/emu8086-pro.git
-   cd emu8086-pro
+   git clone https://github.com/avm1234567/open8086.git
+   cd open8086
    ```
 
 2. **Run Locally**:
@@ -42,11 +42,11 @@ Thank you for your interest in contributing to **EMU8086 PRO**! Our mission is t
 ## 📁 Repository Structure
 
 ```
-emu8086-pro/
+open8086/
 ├── index.html                 # Main web IDE & emulator interface
 ├── server.js                  # Zero-dependency local Node.js static server
 ├── launch.bat                 # Windows standalone app-mode launcher
-├── EMU8086-Pro.vbs            # Silent Windows desktop window launcher
+├── Open8086.vbs               # Silent Windows desktop window launcher
 ├── css/
 │   └── style.css              # Dark, Light, Retro XP, and CRT themes
 ├── js/
@@ -93,4 +93,4 @@ If you are improving instruction behavior:
 ---
 
 ## 📄 License
-By contributing to EMU8086 PRO, you agree that your contributions will be licensed under the project's [MIT License](LICENSE).
+By contributing to Open8086, you agree that your contributions will be licensed under the project's [MIT License](LICENSE).

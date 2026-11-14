@@ -1,4 +1,4 @@
-// Electron Main Process for EMU8086 PRO
+// Electron Main Process for Open8086
 const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
 
@@ -8,7 +8,7 @@ function createWindow() {
     height: 860,
     minWidth: 1024,
     minHeight: 700,
-    title: 'EMU8086 PRO - 8086 Microprocessor Emulator & Lab Suite',
+    title: 'Open8086 - 8086 Microprocessor Emulator & Lab Suite',
     autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: false,

@@ -1,4 +1,4 @@
-name: EMU8086 PRO Test Suite
+name: Open8086 Test Suite
 
 on:
   push:

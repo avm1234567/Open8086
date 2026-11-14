@@ -1,4 +1,4 @@
-# 🚀 EMU8086 PRO
+# 🚀 Open8086
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT">
@@ -10,18 +10,18 @@
 
 <p align="center">
   <b>A modern, zero-dependency, open-source 8086 microprocessor emulator, two-pass assembler, and interactive university lab suite.</b><br>
-  <i>Built to replace outdated, buggy 16-bit Windows software and give students, educators, and engineers a fast, beautiful, and reliable 8086 playground.</i>
+  <i>Built to replace outdated, proprietary 16-bit software and give students, educators, and engineers a fast, beautiful, and reliable 8086 playground.</i>
 </p>
 
 ---
 
-## ⚡ Why EMU8086 PRO? (Taking Down Legacy emu8086)
+## ⚡ Why Open8086? (Taking Down Legacy emu8086)
 
-For over two decades, engineering universities have forced students to use abandoned 2005-era `emu8086` software that requires DOSBox emulators, crashes on modern 64-bit Windows, lacks high-DPI scaling, and triggers false-positive antivirus warnings.
+For over two decades, engineering universities have relied on abandoned 2005-era `emu8086` software that requires DOSBox emulators, crashes on modern 64-bit Windows, lacks high-DPI scaling, and triggers false-positive antivirus warnings.
 
-**EMU8086 PRO fixes everything:**
+**Open8086 fixes everything:**
 
-| Feature | Legacy emu8086 (2005) | 🚀 EMU8086 PRO (Modern) |
+| Feature | Legacy emu8086 (2005) | 🚀 Open8086 (Modern) |
 | :--- | :---: | :---: |
 | **Platform Support** | Windows only (needs DOSBox/Wine on Linux/Mac) | **Any Browser (Windows, macOS, Linux, ChromeOS, iOS, Android)** |
 | **Installation** | Requires installer & admin privileges | **Zero install! Just open `index.html`** |
@@ -54,7 +54,7 @@ npm start
 ```
 
 ### Option 3: Native App Window on Windows
-Double-click `launch.bat` or `EMU8086-Pro.vbs` to launch as a borderless standalone desktop window.
+Double-click `launch.bat` or `Open8086.vbs` to launch as a borderless standalone desktop window.
 
 ### Option 4: Deploy Instantly to GitHub Pages
 1. Push this repository to GitHub.

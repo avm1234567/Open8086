@@ -839,7 +839,7 @@ MOV AH, 4Ch       ; DOS function: terminate program
 INT 21h
 
 ; --- DATA SECTION ---
-msg DB 'Hello from EMU8086 Pro!', 0Dh, 0Ah, 'Ready for Lab on Monday!$'
+msg DB 'Hello from Open8086!', 0Dh, 0Ah, 'Ready for Lab on Monday!$'
 `
   }
 ];

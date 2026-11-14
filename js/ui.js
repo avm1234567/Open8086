@@ -1,4 +1,4 @@
-// UI Controller for EMU8086 Pro
+// UI Controller for Open8086
 class UIController {
   constructor(cpu, memory, assembler, terminal) {
     this.cpu = cpu;

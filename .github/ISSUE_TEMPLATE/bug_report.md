@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve EMU8086 PRO
+about: Create a report to help us improve Open8086
 title: '[BUG] '
 labels: bug
 assignees: ''
@@ -22,7 +22,7 @@ HLT
 What register values, flags, or output did you expect?
 
 **Actual behavior**
-What did EMU8086 PRO actually do? (e.g. wrong AX value, flag not set, assembly syntax error).
+What did Open8086 actually do? (e.g. wrong AX value, flag not set, assembly syntax error).
 
 **Environment:**
 - OS: [e.g. Windows 11, macOS Sequoia, Ubuntu 24.04]

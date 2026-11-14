@@ -1,6 +1,6 @@
 @echo off
-title EMU8086 PRO Launcher
-echo Starting EMU8086 PRO...
+title Open8086 Launcher
+echo Starting Open8086...
 
 :: Try launching in Edge App Mode (looks like a native desktop window)
 start "" msedge.exe --app="file:///%~dp0index.html" 2>nul

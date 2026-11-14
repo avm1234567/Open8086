@@ -1,7 +1,7 @@
 {
-  "name": "emu8086-pro",
+  "name": "open8086",
   "version": "1.0.0",
-  "description": "EMU8086 PRO - Zero-dependency, modern web-based 8086 microprocessor emulator, assembler, and interactive university lab suite.",
+  "description": "Open8086 - Zero-dependency, modern web-based 8086 microprocessor emulator, assembler, and interactive university lab suite.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -13,9 +13,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/emu8086-pro/emu8086-pro.git"
+    "url": "https://github.com/avm1234567/open8086.git"
   },
   "keywords": [
+    "open8086",
     "emu8086",
     "8086",
     "emulator",
@@ -29,10 +30,10 @@
     "university-lab",
     "computer-architecture"
   ],
-  "author": "EMU8086 PRO Contributors",
+  "author": "Open8086 Contributors",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/emu8086-pro/emu8086-pro/issues"
+    "url": "https://github.com/avm1234567/open8086/issues"
   },
-  "homepage": "https://github.com/emu8086-pro/emu8086-pro#readme"
+  "homepage": "https://github.com/avm1234567/open8086#readme"
 }

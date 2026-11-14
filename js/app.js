@@ -1,4 +1,4 @@
-// Main Application Coordinator for EMU8086 Pro
+// Main Application Coordinator for Open8086
 class App {
   constructor() {
     this.memory = new Memory();
@@ -38,7 +38,7 @@ class App {
     // 6. Bind global shortcuts
     this.bindShortcuts();
 
-    console.log("EMU8086 Pro initialized successfully!");
+    console.log("Open8086 initialized successfully!");
   }
 
   assembleCurrentCode() {
