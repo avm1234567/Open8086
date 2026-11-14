@@ -2,7 +2,6 @@
   "name": "open8086",
   "version": "1.0.0",
   "description": "Open8086 - Zero-dependency, modern web-based 8086 microprocessor emulator, assembler, and interactive university lab suite.",
-  "main": "server.js",
   "scripts": {
     "build": "echo 'Static build ready'",
     "start": "node server.js",
