@@ -207,7 +207,8 @@ class UIController {
       { id: "OF", name: "Overflow (OF)", desc: "Set when signed arithmetic overflow occurs" },
       { id: "PF", name: "Parity (PF)", desc: "Set when lower 8 bits have even number of 1s" },
       { id: "AF", name: "Aux Carry (AF)", desc: "Set when carry occurs from bit 3 to bit 4 (BCD)" },
-      { id: "IF", name: "Interrupt (IF)", desc: "Interrupt enable flag" },
+      { id: "TF", name: "Trap (TF)", desc: "Trap / Single-step flag for hardware debuggers (INT 1)" },
+      { id: "IF", name: "Interrupt (IF)", desc: "Interrupt enable flag (STI / CLI)" },
       { id: "DF", name: "Direction (DF)", desc: "0 = auto-increment (CLD), 1 = auto-decrement (STD)" }
     ];
 

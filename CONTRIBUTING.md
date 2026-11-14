@@ -7,7 +7,7 @@ Thank you for your interest in contributing to **Open8086**! Our mission is to p
 ## 🛠️ Development Philosophy
 
 - **Zero External Runtime Dependencies**: The core web app runs in any modern browser directly by opening `index.html`. Do not introduce required npm packages, bundlers, or heavy transpilations for the core runtime.
-- **Pure 8086 Fidelity**: Emulate actual 8086 register behaviors, segment arithmetic (`Segment * 16 + Offset`), flags (`CF`, `ZF`, `SF`, `OF`, `PF`, `AF`, `IF`, `DF`), and BIOS/DOS interrupts.
+- **Pure 8086 Fidelity**: Emulate actual 8086 register behaviors, segment arithmetic (`Segment * 16 + Offset`), flags (`CF`, `PF`, `AF`, `ZF`, `SF`, `TF`, `IF`, `DF`, `OF`), and BIOS/DOS interrupts.
 - **Accessible & Educational**: Clear UI indicators, real-time memory & register visualizations, and helpful error messages for university coursework.
 
 ---

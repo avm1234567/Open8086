@@ -145,7 +145,7 @@ Click the **116 Instruction Reference** tab to search by name or category, inspe
    - 8-bit split access: `AH`/`AL`, `BH`/`BL`, `CH`/`CL`, `DH`/`DL`.
    - Pointers & Indexes: `SP`, `BP`, `SI`, `DI`, `IP`.
    - Segment Registers: `CS`, `DS`, `SS`, `ES`.
-   - Flags Register: `CF`, `PF`, `AF`, `ZF`, `SF`, `OF`, `IF`, `DF`.
+   - Flags Register (9 active flags): `CF`, `PF`, `AF`, `ZF`, `SF`, `TF`, `IF`, `DF`, `OF`.
    - Full execution history stack for Step Back / Undo.
 
 2. **Memory Subsystem (`js/memory.js`)**:
