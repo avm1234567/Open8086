@@ -4,6 +4,7 @@
   "description": "Open8086 - Zero-dependency, modern web-based 8086 microprocessor emulator, assembler, and interactive university lab suite.",
   "main": "server.js",
   "scripts": {
+    "build": "echo 'Static build ready'",
     "start": "node server.js",
     "test": "node tools/test_all_116_instructions.js && node tools/test_experiments.js && node tools/verify_correctness.js",
     "test:instructions": "node tools/test_all_116_instructions.js",

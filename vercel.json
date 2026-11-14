@@ -1,5 +1,6 @@
 {
-  "version": 2,
-  "name": "open8086",
-  "cleanUrls": true
+  "outputDirectory": ".",
+  "rewrites": [
+    { "source": "/", "destination": "/index.html" }
+  ]
 }
