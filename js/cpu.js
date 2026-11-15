@@ -1303,8 +1303,8 @@ class CPU {
         if (ops[0] && ops[0].val) {
           this.regs.SP = (this.regs.SP + ops[0].val) & 0xFFFF;
         }
-        // In emu8086 COM file, if returning from the main routine (SP returned to original stack top), halt program!
-        if (this.regs.SP >= 0xFFFE) {
+        // In DOS COM programs, returning with IP == 0 indicates exit back to PSP / INT 20h
+        if (this.regs.IP === 0) {
           this.halted = true;
         }
         break;
