@@ -16,10 +16,13 @@ class Assembler {
     token = token.toString().trim();
     if ((token.startsWith("'") && token.endsWith("'")) || (token.startsWith('"') && token.endsWith('"'))) {
       if (token.length === 3) return token.charCodeAt(1);
+      if (token.length === 4) return (token.charCodeAt(1) << 8) | token.charCodeAt(2);
     }
 
     const lower = token.toLowerCase();
-    if (lower.endsWith("h")) {
+    // In 8086 assembly, hex numbers ending with 'h' must start with a decimal digit (0-9)
+    // so they do not collide with labels like DADH or registers like AH
+    if (lower.endsWith("h") && /^[+-]?[0-9][0-9a-f]*h$/i.test(lower)) {
       let h = lower.slice(0, -1);
       if (h.startsWith("+")) h = h.slice(1);
       const isNeg = h.startsWith("-");
@@ -115,15 +118,25 @@ class Assembler {
     let memInner = null;
     let baseVar = null;
 
-    const indexedVarMatch = /^([A-Z_][A-Z0-9_]*)\[(.*)\]$/i.exec(opStr);
+    // Support MASM separate brackets syntax like [BX][SI] or array[BX][SI]
+    let normalizedOp = opStr.replace(/\]\s*\[/g, " + ");
+
+    const indexedVarMatch = /^([A-Z_][A-Z0-9_]*)\[(.*)\]$/i.exec(normalizedOp);
     if (indexedVarMatch) {
       baseVar = indexedVarMatch[1];
       memInner = indexedVarMatch[2];
-    } else if (opStr.startsWith("[") && opStr.endsWith("]")) {
-      memInner = opStr.slice(1, -1).trim();
+    } else if (normalizedOp.startsWith("[") && normalizedOp.endsWith("]")) {
+      memInner = normalizedOp.slice(1, -1).trim();
     }
 
     if (memInner !== null) {
+      // Check for inside-bracket segment override like [ES:BX] or [CS:100h]
+      const innerSegMatch = /^(CS|DS|SS|ES):(.*)$/i.exec(memInner);
+      if (innerSegMatch) {
+        if (!segOverride) segOverride = innerSegMatch[1].toUpperCase();
+        memInner = innerSegMatch[2].trim();
+      }
+
       let expr = memInner;
       if (baseVar) expr = baseVar + " + " + expr;
 

@@ -190,7 +190,7 @@ class CPU {
     return (p % 2 === 0) ? 1 : 0;
   }
 
-  updateAddFlags(res, op1, op2, is16Bit = false) {
+  updateAddFlags(res, op1, op2, is16Bit = false, carry = 0) {
     const mask = is16Bit ? 0xFFFF : 0xFF;
     const signBit = is16Bit ? 0x8000 : 0x80;
     const carryBit = is16Bit ? 0x10000 : 0x100;
@@ -200,34 +200,39 @@ class CPU {
     this.flags.ZF = (r === 0) ? 1 : 0;
     this.flags.SF = (r & signBit) ? 1 : 0;
     this.flags.PF = this.calcParity(r & 0xFF);
-    this.flags.AF = (((op1 & 0x0F) + (op2 & 0x0F)) > 0x0F) ? 1 : 0;
+    this.flags.AF = (((op1 ^ op2 ^ res) & 0x10) !== 0) ? 1 : 0;
 
-    // Overflow: (+ + = -) or (- - = +)
-    const sign1 = (op1 & signBit) !== 0;
-    const sign2 = (op2 & signBit) !== 0;
-    const signR = (r & signBit) !== 0;
-    this.flags.OF = (sign1 === sign2 && sign1 !== signR) ? 1 : 0;
+    // Signed overflow: s1 + s2 + carry outside valid signed range
+    const s1 = is16Bit ? (op1 & 0x8000 ? op1 - 0x10000 : op1) : (op1 & 0x80 ? op1 - 0x100 : op1);
+    const s2 = is16Bit ? (op2 & 0x8000 ? op2 - 0x10000 : op2) : (op2 & 0x80 ? op2 - 0x100 : op2);
+    const sSum = s1 + s2 + carry;
+    const minVal = is16Bit ? -32768 : -128;
+    const maxVal = is16Bit ? 32767 : 127;
+    this.flags.OF = (sSum < minVal || sSum > maxVal) ? 1 : 0;
 
     return r;
   }
 
-  updateSubFlags(op1, op2, is16Bit = false) {
+  updateSubFlags(op1, op2, is16Bit = false, borrow = 0) {
     const mask = is16Bit ? 0xFFFF : 0xFF;
     const signBit = is16Bit ? 0x8000 : 0x80;
 
-    const res = (op1 - op2) & (is16Bit ? 0x1FFFF : 0x1FF);
-    const r = res & mask;
+    const diff = op1 - op2 - borrow;
+    const r = diff & mask;
 
-    this.flags.CF = (op1 < op2) ? 1 : 0;
+    this.flags.CF = (op1 < (op2 + borrow)) ? 1 : 0;
     this.flags.ZF = (r === 0) ? 1 : 0;
     this.flags.SF = (r & signBit) ? 1 : 0;
     this.flags.PF = this.calcParity(r & 0xFF);
-    this.flags.AF = ((op1 & 0x0F) < (op2 & 0x0F)) ? 1 : 0;
+    this.flags.AF = (((op1 ^ op2 ^ diff) & 0x10) !== 0) ? 1 : 0;
 
-    const sign1 = (op1 & signBit) !== 0;
-    const sign2 = (op2 & signBit) !== 0;
-    const signR = (r & signBit) !== 0;
-    this.flags.OF = (sign1 !== sign2 && sign1 !== signR) ? 1 : 0;
+    // Signed overflow: s1 - s2 - borrow outside valid signed range
+    const s1 = is16Bit ? (op1 & 0x8000 ? op1 - 0x10000 : op1) : (op1 & 0x80 ? op1 - 0x100 : op1);
+    const s2 = is16Bit ? (op2 & 0x8000 ? op2 - 0x10000 : op2) : (op2 & 0x80 ? op2 - 0x100 : op2);
+    const sDiff = s1 - s2 - borrow;
+    const minVal = is16Bit ? -32768 : -128;
+    const maxVal = is16Bit ? 32767 : 127;
+    this.flags.OF = (sDiff < minVal || sDiff > maxVal) ? 1 : 0;
 
     return r;
   }
@@ -420,8 +425,9 @@ class CPU {
       case "XLATB": {
         const bx = this.getReg16("BX");
         const al = this.getReg8("AL");
-        const ds = this.getReg16("DS");
-        const val = this.memory.readByteSeg(ds, (bx + al) & 0xFFFF);
+        const segName = (ops[0] && ops[0].seg) ? ops[0].seg : "DS";
+        const seg = this.getReg16(segName);
+        const val = this.memory.readByteSeg(seg, (bx + al) & 0xFFFF);
         this.setReg8("AL", val);
         break;
       }
@@ -437,7 +443,7 @@ class CPU {
       case "LDS": {
         const reg = ops[0];
         const mem = ops[1];
-        const seg = mem.seg ? this.getReg16(mem.seg) : this.getReg16("DS");
+        const seg = mem.seg ? this.getReg16(mem.seg) : (mem.isStack ? this.getReg16("SS") : this.getReg16("DS"));
         const offset = this.evalMemoryOffset(mem);
         const wordOffset = this.memory.readWordSeg(seg, offset);
         const wordSeg = this.memory.readWordSeg(seg, offset + 2);
@@ -449,7 +455,7 @@ class CPU {
       case "LES": {
         const reg = ops[0];
         const mem = ops[1];
-        const seg = mem.seg ? this.getReg16(mem.seg) : this.getReg16("DS");
+        const seg = mem.seg ? this.getReg16(mem.seg) : (mem.isStack ? this.getReg16("SS") : this.getReg16("DS"));
         const offset = this.evalMemoryOffset(mem);
         const wordOffset = this.memory.readWordSeg(seg, offset);
         const wordSeg = this.memory.readWordSeg(seg, offset + 2);
@@ -491,7 +497,7 @@ class CPU {
         const op1 = this.evalOperand(dest, is16 ? 2 : 1).val;
         const op2 = this.evalOperand(src, is16 ? 2 : 1).val;
         const cf = this.flags.CF ? 1 : 0;
-        const res = this.updateAddFlags(op1 + op2 + cf, op1, op2 + cf, is16);
+        const res = this.updateAddFlags(op1 + op2 + cf, op1, op2, is16, cf);
         this.assignOperand(dest, res, is16 ? 2 : 1);
         break;
       }
@@ -502,7 +508,7 @@ class CPU {
         const is16 = dest.size === 2 || (dest.type === "reg" && this.isReg16(dest.name));
         const op1 = this.evalOperand(dest, is16 ? 2 : 1).val;
         const op2 = this.evalOperand(src, is16 ? 2 : 1).val;
-        const res = this.updateSubFlags(op1, op2, is16);
+        const res = this.updateSubFlags(op1, op2, is16, 0);
         this.assignOperand(dest, res, is16 ? 2 : 1);
         break;
       }
@@ -514,7 +520,7 @@ class CPU {
         const op1 = this.evalOperand(dest, is16 ? 2 : 1).val;
         const op2 = this.evalOperand(src, is16 ? 2 : 1).val;
         const cf = this.flags.CF ? 1 : 0;
-        const res = this.updateSubFlags(op1, op2 + cf, is16);
+        const res = this.updateSubFlags(op1, op2, is16, cf);
         this.assignOperand(dest, res, is16 ? 2 : 1);
         break;
       }
@@ -653,6 +659,7 @@ class CPU {
         if (is16 && (divisor & 0x8000)) divisor -= 0x10000;
         if (!is16 && (divisor & 0x80)) divisor -= 0x100;
         if (divisor === 0) {
+          if (this.interruptController) this.interruptController.terminal.writeSystem("[Divide by zero exception!]");
           this.halted = true;
           break;
         }
@@ -660,6 +667,11 @@ class CPU {
           let dividend = ((this.getReg16("DX") << 16) | this.getReg16("AX"));
           const quot = Math.trunc(dividend / divisor);
           const rem = dividend % divisor;
+          if (quot < -32768 || quot > 32767) {
+            if (this.interruptController) this.interruptController.terminal.writeSystem("[Divide overflow exception!]");
+            this.halted = true;
+            break;
+          }
           this.setReg16("AX", quot & 0xFFFF);
           this.setReg16("DX", rem & 0xFFFF);
         } else {
@@ -667,6 +679,11 @@ class CPU {
           if (dividend & 0x8000) dividend -= 0x10000;
           const quot = Math.trunc(dividend / divisor);
           const rem = dividend % divisor;
+          if (quot < -128 || quot > 127) {
+            if (this.interruptController) this.interruptController.terminal.writeSystem("[Divide overflow exception!]");
+            this.halted = true;
+            break;
+          }
           this.setReg8("AL", quot & 0xFF);
           this.setReg8("AH", rem & 0xFF);
         }
@@ -747,20 +764,25 @@ class CPU {
 
       case "DAA": {
         let al = this.getReg8("AL");
-        let cf = this.flags.CF;
+        const oldAL = al;
+        const oldCF = this.flags.CF;
+        let newCF = 0;
+
         if ((al & 0x0F) > 9 || this.flags.AF === 1) {
-          al += 6;
+          al = (al + 6) & 0xFF;
           this.flags.AF = 1;
         } else {
           this.flags.AF = 0;
         }
-        if (al > 0x9F || cf === 1) {
-          al += 0x60;
-          this.flags.CF = 1;
+
+        if (oldAL > 0x99 || oldCF === 1) {
+          al = (al + 0x60) & 0xFF;
+          newCF = 1;
         } else {
-          this.flags.CF = 0;
+          newCF = 0;
         }
-        al &= 0xFF;
+
+        this.flags.CF = newCF;
         this.setReg8("AL", al);
         this.flags.ZF = (al === 0) ? 1 : 0;
         this.flags.SF = (al & 0x80) ? 1 : 0;
@@ -770,20 +792,25 @@ class CPU {
 
       case "DAS": {
         let al = this.getReg8("AL");
-        let cf = this.flags.CF;
+        const oldAL = al;
+        const oldCF = this.flags.CF;
+        let newCF = 0;
+
         if ((al & 0x0F) > 9 || this.flags.AF === 1) {
-          al -= 6;
+          al = (al - 6) & 0xFF;
           this.flags.AF = 1;
         } else {
           this.flags.AF = 0;
         }
-        if (al > 0x9F || cf === 1) {
-          al -= 0x60;
-          this.flags.CF = 1;
+
+        if (oldAL > 0x99 || oldCF === 1) {
+          al = (al - 0x60) & 0xFF;
+          newCF = 1;
         } else {
-          this.flags.CF = 0;
+          newCF = 0;
         }
-        al &= 0xFF;
+
+        this.flags.CF = newCF;
         this.setReg8("AL", al);
         this.flags.ZF = (al === 0) ? 1 : 0;
         this.flags.SF = (al & 0x80) ? 1 : 0;
@@ -882,13 +909,14 @@ class CPU {
         let val = this.evalOperand(dest, is16 ? 2 : 1).val;
         const count = (countOp.type === "reg" ? this.getReg8("CL") : countOp.val) & 0x1F;
         const signBit = is16 ? 0x8000 : 0x80;
+        const originalSign = (val & signBit) ? 1 : 0;
 
         for (let i = 0; i < count; i++) {
           this.flags.CF = val & 1;
           val = val >>> 1;
         }
         if (count === 1) {
-          this.flags.OF = (val & signBit) ? 1 : 0;
+          this.flags.OF = originalSign;
         }
         if (count > 0) {
           this.flags.ZF = (val === 0) ? 1 : 0;
