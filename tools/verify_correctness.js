@@ -70,6 +70,35 @@ runTest('exp4c', (cpu, mem, res) => {
   console.log('Exp 4c reversed array:', rev.join(', '), '(Expected: 0x66, 0x55, 0x44, 0x33, 0x22, 0x11) ->', pass ? 'PASS' : 'FAIL');
 });
 
+// Check Anonymous ORG Data Dereferencing
+(function testAnonymousOrgData() {
+  const code = `
+  ORG 100H
+  MOV AL, [200H]
+  MOV BX, -4
+  IMUL BX
+  HLT
+  ORG 200H
+  DB 05H
+  `;
+  const asm = new Assembler();
+  const res = asm.assemble(code);
+  const mem = new Memory();
+  const cpu = new CPU(mem);
+  cpu.reset(res.startIP);
+  for (let dw of res.dataWrites) mem.loadBuffer(0x0700, dw.offset, dw.bytes);
+  const instMap = {};
+  for (let inst of res.instructions) instMap[inst.ip] = inst;
+  while (!cpu.halted) {
+    const inst = instMap[cpu.getReg16('IP')];
+    if (!inst) break;
+    cpu.executeInstruction(inst);
+  }
+  const pass = (cpu.getReg8('AL') === 0xEC && cpu.getReg16('AX') === 0xFFEC && cpu.getReg16('DX') === 0xFFFF);
+  if (!pass) allPassed = false;
+  console.log('Anonymous ORG 200H + DB 05H dereference & IMUL BX ->', pass ? 'PASS' : 'FAIL');
+})();
+
 if (allPassed) {
   console.log('\n>>> ALL ALGORITHMIC VERIFICATIONS PASSED! <<<');
   process.exit(0);

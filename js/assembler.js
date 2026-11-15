@@ -312,22 +312,27 @@ class Assembler {
       }
 
       // Check Data Declarations
-      const dataMatch = /^([A-Z_][A-Z0-9_]*)\s+(DB|DW|DD)\s+(.*)$/i.exec(line);
-      if (dataMatch) {
-        const varName = dataMatch[1].toUpperCase();
-        const type = dataMatch[2].toUpperCase();
-        const rest = dataMatch[3];
+      // Supports "var_name DB/DW/DD ...", "var_name: DB/DW/DD ...", and anonymous "DB/DW/DD ..."
+      const labeledDataMatch = /^([A-Z_][A-Z0-9_]*):?\s+(DB|DW|DD)\s+(.*)$/i.exec(line);
+      const anonDataMatch = /^(DB|DW|DD)\s+(.*)$/i.exec(line);
+
+      if (labeledDataMatch || anonDataMatch) {
+        const varName = labeledDataMatch ? labeledDataMatch[1].toUpperCase() : null;
+        const type = (labeledDataMatch ? labeledDataMatch[2] : anonDataMatch[1]).toUpperCase();
+        const rest = labeledDataMatch ? labeledDataMatch[3] : anonDataMatch[2];
         const bytes = this.parseDataDeclaration(type, rest);
 
-        this.symbols[varName] = {
-          name: varName,
-          offset: currentIP,
-          type: type,
-          size: type === "DB" ? 1 : (type === "DW" ? 2 : 4),
-          totalBytes: bytes.length,
-          bytes: bytes,
-          line: lineNum
-        };
+        if (varName) {
+          this.symbols[varName] = {
+            name: varName,
+            offset: currentIP,
+            type: type,
+            size: type === "DB" ? 1 : (type === "DW" ? 2 : 4),
+            totalBytes: bytes.length,
+            bytes: bytes,
+            line: lineNum
+          };
+        }
 
         initialDataBytes.push({ offset: currentIP, bytes });
         currentIP = (currentIP + bytes.length) & 0xFFFF;
