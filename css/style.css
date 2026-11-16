@@ -960,3 +960,38 @@ footer.app-footer {
 .footer-metrics b {
   color: var(--text-main);
 }
+
+/* GitHub Contribution Links */
+.btn-github {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-github:hover {
+  background-color: #24292f;
+  color: #ffffff;
+  border-color: #57606a;
+}
+
+.footer-github-link {
+  color: var(--text-dim);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.15s ease;
+}
+
+.footer-github-link:hover {
+  color: var(--accent-cyan);
+  text-decoration: underline;
+}
