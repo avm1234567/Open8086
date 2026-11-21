@@ -27,6 +27,17 @@ class CPU {
     this.history = [];
     this.maxHistory = 100;
 
+    // Memory write tracking for Step Back (Undo)
+    this.currentStepMemWrites = [];
+    this.isRecordingMem = true;
+    if (this.memory) {
+      this.memory.onWrite = (addr, oldVal) => {
+        if (this.isRecordingMem) {
+          this.currentStepMemWrites.push({ addr, oldVal });
+        }
+      };
+    }
+
     // Breakpoints set of source line numbers
     this.breakpoints = new Set();
   }
@@ -60,6 +71,7 @@ class CPU {
     this.stepCount = 0;
     this.cycleCount = 0;
     this.history = [];
+    this.currentStepMemWrites = [];
     this.memory.clearAccessTracking();
   }
 
@@ -70,7 +82,8 @@ class CPU {
       flags: { ...this.flags },
       halted: this.halted,
       stepCount: this.stepCount,
-      cycleCount: this.cycleCount
+      cycleCount: this.cycleCount,
+      memWrites: []
     };
   }
 
@@ -80,6 +93,16 @@ class CPU {
     this.halted = state.halted;
     this.stepCount = state.stepCount;
     this.cycleCount = state.cycleCount;
+
+    // Undo memory writes performed during this step (in reverse order)
+    if (state.memWrites && state.memWrites.length > 0 && this.memory) {
+      this.isRecordingMem = false;
+      for (let i = state.memWrites.length - 1; i >= 0; i--) {
+        const w = state.memWrites[i];
+        this.memory.ram[w.addr] = w.oldVal;
+      }
+      this.isRecordingMem = true;
+    }
   }
 
   // --- Register Accessors ---
@@ -315,7 +338,11 @@ class CPU {
 
     // Snapshot state for undo
     if (this.history.length >= this.maxHistory) this.history.shift();
-    this.history.push(this.saveState());
+    const state = this.saveState();
+    this.history.push(state);
+
+    this.currentStepMemWrites = [];
+    this.isRecordingMem = true;
 
     this.memory.clearAccessTracking();
     this.stepCount++;
@@ -569,6 +596,11 @@ class CPU {
 
       case "MUL": {
         const src = ops[0];
+        if (!src || src.type === "imm") {
+          if (this.interruptController) this.interruptController.terminal.writeSystem("[Illegal instruction: MUL with immediate operand]");
+          this.halted = true;
+          break;
+        }
         const is16 = src.size === 2 || (src.type === "reg" && this.isReg16(src.name));
         if (is16) {
           const ax = this.getReg16("AX");
@@ -593,6 +625,11 @@ class CPU {
 
       case "IMUL": {
         const src = ops[0];
+        if (!src || src.type === "imm") {
+          if (this.interruptController) this.interruptController.terminal.writeSystem("[Illegal instruction: IMUL with immediate operand]");
+          this.halted = true;
+          break;
+        }
         const is16 = src.size === 2 || (src.type === "reg" && this.isReg16(src.name));
         if (is16) {
           let ax = this.getReg16("AX");
@@ -621,6 +658,11 @@ class CPU {
 
       case "DIV": {
         const src = ops[0];
+        if (!src || src.type === "imm") {
+          if (this.interruptController) this.interruptController.terminal.writeSystem("[Illegal instruction: DIV with immediate operand]");
+          this.halted = true;
+          break;
+        }
         const is16 = src.size === 2 || (src.type === "reg" && this.isReg16(src.name));
         const divisor = this.evalOperand(src, is16 ? 2 : 1).val;
         if (divisor === 0) {
@@ -633,6 +675,7 @@ class CPU {
           const quot = Math.floor(dividend / divisor);
           const rem = dividend % divisor;
           if (quot > 0xFFFF) {
+            if (this.interruptController) this.interruptController.terminal.writeSystem("[Divide overflow exception!]");
             this.halted = true;
             break;
           }
@@ -643,6 +686,7 @@ class CPU {
           const quot = Math.floor(dividend / divisor);
           const rem = dividend % divisor;
           if (quot > 0xFF) {
+            if (this.interruptController) this.interruptController.terminal.writeSystem("[Divide overflow exception!]");
             this.halted = true;
             break;
           }
@@ -654,6 +698,11 @@ class CPU {
 
       case "IDIV": {
         const src = ops[0];
+        if (!src || src.type === "imm") {
+          if (this.interruptController) this.interruptController.terminal.writeSystem("[Illegal instruction: IDIV with immediate operand]");
+          this.halted = true;
+          break;
+        }
         const is16 = src.size === 2 || (src.type === "reg" && this.isReg16(src.name));
         let divisor = this.evalOperand(src, is16 ? 2 : 1).val;
         if (is16 && (divisor & 0x8000)) divisor -= 0x10000;
@@ -739,9 +788,15 @@ class CPU {
       }
 
       case "AAM": {
+        const base = (ops[0] && ops[0].val !== undefined) ? ops[0].val : 10;
+        if (base === 0) {
+          if (this.interruptController) this.interruptController.terminal.writeSystem("[Divide by zero exception!]");
+          this.halted = true;
+          break;
+        }
         let al = this.getReg8("AL");
-        const ah = Math.floor(al / 10);
-        al = al % 10;
+        const ah = Math.floor(al / base);
+        al = al % base;
         this.setReg8("AH", ah);
         this.setReg8("AL", al);
         this.flags.ZF = (al === 0) ? 1 : 0;
@@ -751,9 +806,10 @@ class CPU {
       }
 
       case "AAD": {
+        const base = (ops[0] && ops[0].val !== undefined) ? ops[0].val : 10;
         const ah = this.getReg8("AH");
         const al = this.getReg8("AL");
-        const res = (ah * 10 + al) & 0xFF;
+        const res = (ah * base + al) & 0xFF;
         this.setReg8("AL", res);
         this.setReg8("AH", 0);
         this.flags.ZF = (res === 0) ? 1 : 0;
@@ -1378,7 +1434,11 @@ class CPU {
         const intNum = ops[0].val;
         if (this.interruptController) {
           const cont = this.interruptController.handleInterrupt(intNum);
-          if (!cont) return "WAITING_FOR_INPUT";
+          if (!cont) {
+            state.memWrites = this.currentStepMemWrites.slice();
+            this.currentStepMemWrites = [];
+            return "WAITING_FOR_INPUT";
+          }
         }
         break;
       }
@@ -1394,6 +1454,9 @@ class CPU {
         console.warn(`Unrecognized instruction mnemonic: ${mnemonic}`);
         break;
     }
+
+    state.memWrites = this.currentStepMemWrites.slice();
+    this.currentStepMemWrites = [];
 
     return true;
   }

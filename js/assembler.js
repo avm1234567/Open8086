@@ -11,6 +11,25 @@ class Assembler {
     this.sourceLines = [];
   }
 
+  stripComment(line) {
+    let inQuote = false;
+    let quoteChar = "";
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === "'" || c === '"') {
+        if (!inQuote) {
+          inQuote = true;
+          quoteChar = c;
+        } else if (c === quoteChar) {
+          inQuote = false;
+        }
+      } else if (c === ";" && !inQuote) {
+        return line.substring(0, i);
+      }
+    }
+    return line;
+  }
+
   parseNumber(token) {
     if (token === undefined || token === null) return NaN;
     token = token.toString().trim();
@@ -30,12 +49,17 @@ class Assembler {
       const val = parseInt(h, 16);
       return isNeg ? -val : val;
     }
-    if (lower.startsWith("0x")) return parseInt(lower, 16);
+    if (lower.startsWith("0x") && /^0x[0-9a-f]+$/i.test(lower)) return parseInt(lower, 16);
     if (lower.endsWith("b") && /^[01]+b$/i.test(lower)) return parseInt(lower.slice(0, -1), 2);
-    if (lower.endsWith("o") || lower.endsWith("q")) return parseInt(lower.slice(0, -1), 8);
+    if ((lower.endsWith("o") || lower.endsWith("q")) && /^[0-7]+[oq]$/i.test(lower)) return parseInt(lower.slice(0, -1), 8);
 
-    const d = parseInt(token, 10);
-    return isNaN(d) ? NaN : d;
+    if (/^[+-]?[0-9]+d?$/i.test(lower)) {
+      let dStr = lower;
+      if (dStr.endsWith("d")) dStr = dStr.slice(0, -1);
+      return parseInt(dStr, 10);
+    }
+
+    return NaN;
   }
 
   splitOperands(str) {
@@ -287,10 +311,7 @@ class Assembler {
 
     // Pre-pass: Collect EQU constants first so they can be used anywhere
     for (let line of this.sourceLines) {
-      let l = line;
-      const s = l.indexOf(";");
-      if (s !== -1) l = l.substring(0, s);
-      l = l.trim();
+      let l = this.stripComment(line).trim();
       const equMatch = /^([A-Z_][A-Z0-9_]*)\s+EQU\s+(.*)$/i.exec(l);
       if (equMatch) {
         const name = equMatch[1].toUpperCase();
@@ -299,16 +320,29 @@ class Assembler {
       }
     }
 
+    const VALID_MNEMONICS = new Set([
+      "AAA", "AAD", "AAM", "AAS", "ADC", "ADD", "AND", "CALL", "CBW",
+      "CLC", "CLD", "CLI", "CMC", "CMP", "CMPSB", "CMPSW", "CWD", "DAA",
+      "DAS", "DEC", "DIV", "ESC", "HLT", "IDIV", "IMUL", "IN", "INC",
+      "INT", "INTO", "IRET", "JA", "JAE", "JB", "JBE", "JC", "JCXZ",
+      "JE", "JG", "JGE", "JL", "JLE", "JMP", "JNA", "JNAE", "JNB",
+      "JNBE", "JNC", "JNE", "JNG", "JNGE", "JNL", "JNLE", "JNO", "JNP",
+      "JNS", "JNZ", "JO", "JP", "JPE", "JPO", "JS", "JZ", "LAHF",
+      "LDS", "LEA", "LES", "LOCK", "LODSB", "LODSW", "LOOP", "LOOPE",
+      "LOOPNE", "LOOPNZ", "LOOPZ", "MOV", "MOVSB", "MOVSW", "MUL", "NEG",
+      "NOP", "NOT", "OR", "OUT", "POP", "POPA", "POPF", "PUSH", "PUSHA",
+      "PUSHF", "RCL", "RCR", "REP", "REPE", "REPNE", "REPNZ", "REPZ",
+      "RET", "RETF", "ROL", "ROR", "SAHF", "SAL", "SAR", "SBB", "SCASB",
+      "SCASW", "SHL", "SHR", "STC", "STD", "STI", "STOSB", "STOSW",
+      "SUB", "TEST", "WAIT", "XCHG", "XLAT", "XLATB", "XOR"
+    ]);
+
     // Step 1: Parse AST structure of lines
     let currentIP = 0x0100;
 
     for (let lineIdx = 0; lineIdx < this.sourceLines.length; lineIdx++) {
       const lineNum = lineIdx + 1;
-      let line = this.sourceLines[lineIdx];
-
-      const semiIdx = line.indexOf(";");
-      if (semiIdx !== -1) line = line.substring(0, semiIdx);
-      line = line.trim();
+      let line = this.stripComment(this.sourceLines[lineIdx]).trim();
       if (!line) continue;
 
       if (/^([A-Z_][A-Z0-9_]*)\s+EQU/i.test(line)) continue;
@@ -381,6 +415,10 @@ class Assembler {
         operandStr = restOfLine.substring(spaceIdx + 1).trim();
       }
 
+      if (!VALID_MNEMONICS.has(mnemonic)) {
+        this.errors.push({ line: lineNum, message: `Unknown instruction mnemonic: "${mnemonic}"` });
+      }
+
       const rawOperands = operandStr ? this.splitOperands(operandStr) : [];
       const parsedOps = rawOperands.map(op => this.parseOperand(op));
       const size = this.calcInstSize(mnemonic, parsedOps);
@@ -436,6 +474,131 @@ class Assembler {
           } else if (this.labels[symUpper] !== undefined) {
             op.val = this.labels[symUpper];
           }
+        }
+      }
+    }
+
+    // Step 3: Validate instruction operands and addressing modes
+    const segRegs = ["CS", "DS", "SS", "ES"];
+    const reg8List = ["AL", "AH", "BL", "BH", "CL", "CH", "DL", "DH"];
+
+    for (let inst of rawItems) {
+      const m = inst.mnemonic;
+      const ops = inst.operands;
+
+      // 1. MUL operand validation: register or memory only, NO immediate operand allowed
+      if (m === "MUL") {
+        if (ops.length !== 1) {
+          this.errors.push({ line: inst.line, message: `MUL expects exactly 1 operand (register or memory), received ${ops.length}.` });
+        } else if (ops[0].type === "imm") {
+          this.errors.push({
+            line: inst.line,
+            message: `Immediate operand not allowed for MUL (e.g. MUL 03H is invalid on 8086). Use a register or memory operand instead (e.g. MOV BL, 03H followed by MUL BL).`
+          });
+        }
+      }
+
+      // 2. IMUL, DIV, IDIV single-operand validation: register or memory only
+      if ((m === "DIV" || m === "IDIV") && ops.length > 0) {
+        if (ops.length !== 1) {
+          this.errors.push({ line: inst.line, message: `${m} expects exactly 1 operand, received ${ops.length}.` });
+        } else if (ops[0].type === "imm") {
+          this.errors.push({ line: inst.line, message: `Immediate operand not allowed for ${m}. Operand must be a register or memory location.` });
+        }
+      }
+      if (m === "IMUL" && ops.length === 1 && ops[0].type === "imm") {
+        this.errors.push({ line: inst.line, message: `Immediate operand not allowed for single-operand IMUL. Operand must be a register or memory location.` });
+      }
+
+      // 3. INC, DEC, NOT, NEG operand validation: requires register or memory
+      if (["INC", "DEC", "NOT", "NEG"].includes(m)) {
+        if (ops.length !== 1) {
+          this.errors.push({ line: inst.line, message: `${m} expects exactly 1 operand, received ${ops.length}.` });
+        } else if (ops[0].type === "imm") {
+          this.errors.push({ line: inst.line, message: `Immediate operand not allowed for ${m}. Operand must be a register or memory location.` });
+        }
+      }
+
+      // 4. POP operand validation
+      if (m === "POP") {
+        if (ops.length !== 1) {
+          this.errors.push({ line: inst.line, message: `POP expects exactly 1 operand, received ${ops.length}.` });
+        } else if (ops[0].type === "imm") {
+          this.errors.push({ line: inst.line, message: `Immediate operand not allowed for POP.` });
+        } else if (ops[0].type === "reg") {
+          if (ops[0].name === "CS") {
+            this.errors.push({ line: inst.line, message: `POP CS is illegal on 8086 (CS cannot be modified directly with POP).` });
+          } else if (reg8List.includes(ops[0].name)) {
+            this.errors.push({ line: inst.line, message: `Cannot POP 8-bit register ${ops[0].name} on 8086. Stack operations require 16-bit operand.` });
+          }
+        }
+      }
+
+      // 5. PUSH operand validation
+      if (m === "PUSH" && ops.length === 1 && ops[0].type === "reg") {
+        if (reg8List.includes(ops[0].name)) {
+          this.errors.push({ line: inst.line, message: `Cannot PUSH 8-bit register ${ops[0].name} on 8086. Stack operations require 16-bit operand.` });
+        }
+      }
+
+      // 6. Two-operand instructions where destination cannot be immediate
+      const twoOpDestInsts = ["MOV", "XCHG", "ADD", "ADC", "SUB", "SBB", "AND", "OR", "XOR", "LEA", "LDS", "LES"];
+      if (twoOpDestInsts.includes(m)) {
+        if (ops.length !== 2) {
+          this.errors.push({ line: inst.line, message: `${m} expects 2 operands, received ${ops.length}.` });
+        } else if (ops[0].type === "imm") {
+          this.errors.push({ line: inst.line, message: `Destination operand cannot be an immediate value for ${m}.` });
+        }
+      }
+
+      // 7. Memory-to-memory operations rejection
+      if (["MOV", "XCHG", "ADD", "ADC", "SUB", "SBB", "CMP", "AND", "OR", "XOR", "TEST"].includes(m) && ops.length === 2) {
+        if (ops[0].type === "mem" && ops[1].type === "mem") {
+          this.errors.push({ line: inst.line, message: `Memory-to-memory operations not permitted on 8086 for ${m}.` });
+        }
+      }
+
+      // 8. Segment register rules
+      if (m === "MOV" && ops.length === 2) {
+        const dest = ops[0];
+        const src = ops[1];
+        if (dest.type === "reg" && dest.name === "CS") {
+          this.errors.push({ line: inst.line, message: `CS register cannot be destination of MOV.` });
+        } else if (dest.type === "reg" && segRegs.includes(dest.name)) {
+          if (src.type === "imm") {
+            this.errors.push({ line: inst.line, message: `Cannot MOV immediate value into segment register ${dest.name} directly. Move into a general register first.` });
+          } else if (src.type === "reg" && segRegs.includes(src.name)) {
+            this.errors.push({ line: inst.line, message: `Cannot MOV directly between two segment registers.` });
+          }
+        }
+      } else if (!["MOV", "PUSH", "POP"].includes(m)) {
+        for (let op of ops) {
+          if (op && op.type === "reg" && segRegs.includes(op.name)) {
+            this.errors.push({ line: inst.line, message: `Segment register ${op.name} cannot be used with arithmetic/logic instruction ${m}.` });
+          }
+        }
+      }
+
+      // 9. LEA, LDS, LES source must be memory
+      if (["LEA", "LDS", "LES"].includes(m) && ops.length === 2) {
+        if (ops[1].type !== "mem") {
+          this.errors.push({ line: inst.line, message: `${m} source operand must be a memory reference.` });
+        }
+      }
+
+      // 10. Operand size mismatch between two registers
+      if (ops.length >= 2 && ops[0].type === "reg" && ops[1].type === "reg") {
+        const is0_8 = reg8List.includes(ops[0].name);
+        const is1_8 = reg8List.includes(ops[1].name);
+        if (is0_8 !== is1_8) {
+          this.errors.push({ line: inst.line, message: `Operand size mismatch: cannot mix 8-bit register and 16-bit register.` });
+        }
+      }
+
+      // 11. Shift / Rotate count register must be CL
+      if (["SHL", "SHR", "SAL", "SAR", "ROL", "ROR", "RCL", "RCR"].includes(m) && ops.length === 2) {
+        if (ops[1].type === "reg" && ops[1].name !== "CL") {
+          this.errors.push({ line: inst.line, message: `Shift/rotate count register must be CL.` });
         }
       }
     }

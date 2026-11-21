@@ -350,20 +350,70 @@ class UIController {
     if (!this.el.instructionsList || typeof INSTRUCTION_SET === "undefined") return;
 
     const query = this.el.instructionSearch ? this.el.instructionSearch.value.trim().toUpperCase() : "";
-    const keys = Object.keys(INSTRUCTION_SET).sort();
+    const allKeys = Object.keys(INSTRUCTION_SET);
+
+    let matchingKeys = [];
+
+    if (!query) {
+      matchingKeys = allKeys.sort();
+    } else {
+      // 1. Mnemonic-first matching (exact, prefix, contains)
+      const exactMatches = [];
+      const prefixMatches = [];
+      const containsMatches = [];
+
+      for (let k of allKeys) {
+        const name = (INSTRUCTION_SET[k].name || k).toUpperCase();
+        if (name === query) {
+          exactMatches.push(k);
+        } else if (name.startsWith(query)) {
+          prefixMatches.push(k);
+        } else if (name.includes(query)) {
+          containsMatches.push(k);
+        }
+      }
+
+      // If mnemonic matches exist, show them directly without false-positive description matches
+      if (exactMatches.length > 0 || prefixMatches.length > 0 || containsMatches.length > 0) {
+        prefixMatches.sort((a, b) => a.localeCompare(b));
+        containsMatches.sort((a, b) => a.localeCompare(b));
+        matchingKeys = [...exactMatches, ...prefixMatches, ...containsMatches];
+      } else {
+        // 2. Descriptive / semantic search (by title or category, e.g. "multiply", "divide", "jump", "stack")
+        const descMatches = [];
+        for (let k of allKeys) {
+          const item = INSTRUCTION_SET[k];
+          const cat = (item.category || "").toUpperCase();
+          const title = (item.description || "").split(/\r?\n/)[0].trim().toUpperCase();
+          const titleWords = title.split(/[\s,.:()]+/).filter(Boolean);
+
+          let score = 0;
+          if (cat === query) score += 100;
+          else if (cat.includes(query)) score += 50;
+
+          if (titleWords.some(w => w === query)) score += 80;
+          else if (titleWords.some(w => w.startsWith(query))) score += 40;
+
+          if (score > 0) descMatches.push({ key: k, score });
+        }
+        descMatches.sort((a, b) => b.score - a.score || a.key.localeCompare(b.key));
+        matchingKeys = descMatches.map(m => m.key);
+      }
+    }
 
     let listHtml = "";
-    for (let k of keys) {
-      const item = INSTRUCTION_SET[k];
-      if (query && !item.name.includes(query) && !item.description.toUpperCase().includes(query)) {
-        continue;
+    if (matchingKeys.length === 0) {
+      listHtml = `<div style="padding: 12px; color: var(--text-dim); font-size: 13px; text-align: center;">No instructions matching "${query}"</div>`;
+    } else {
+      for (let k of matchingKeys) {
+        const item = INSTRUCTION_SET[k];
+        listHtml += `
+          <div class="inst-item" data-inst="${item.name}">
+            <span class="inst-name">${item.name}</span>
+            <span class="inst-cat">${item.category}</span>
+          </div>
+        `;
       }
-      listHtml += `
-        <div class="inst-item" data-inst="${item.name}">
-          <span class="inst-name">${item.name}</span>
-          <span class="inst-cat">${item.category}</span>
-        </div>
-      `;
     }
 
     this.el.instructionsList.innerHTML = listHtml;
@@ -378,9 +428,11 @@ class UIController {
       });
     });
 
-    if (keys.length > 0 && !this.el.instructionsList.querySelector(".inst-item.active")) {
+    if (matchingKeys.length > 0) {
       const first = this.el.instructionsList.querySelector(".inst-item");
       if (first) first.click();
+    } else if (this.el.instructionDetail) {
+      this.el.instructionDetail.innerHTML = `<div class="empty-detail">No instruction selected.</div>`;
     }
   }
 

@@ -5,6 +5,7 @@ class Memory {
     this.ram = new Uint8Array(size);
     this.lastReads = new Set();
     this.lastWrites = new Set();
+    this.onWrite = null; // Optional callback: (physAddr, oldVal) => void
   }
 
   reset() {
@@ -30,6 +31,9 @@ class Memory {
 
   writeByte(physAddr, value) {
     const addr = physAddr & (this.size - 1);
+    if (this.onWrite) {
+      this.onWrite(addr, this.ram[addr]);
+    }
     this.ram[addr] = value & 0xFF;
     this.lastWrites.add(addr);
   }
